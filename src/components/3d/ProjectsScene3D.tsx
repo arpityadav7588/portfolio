@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float } from "@react-three/drei";
+import { Float, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
-/* ─── 3D Project Card ─── */
+/* ─── 3D Project Card with Pulse ─── */
 function ProjectCard3D({
   position,
   color,
@@ -16,11 +16,17 @@ function ProjectCard3D({
   rotationSpeed: number;
 }) {
   const ref = useRef<THREE.Group>(null);
+  const borderRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     if (ref.current) {
       ref.current.rotation.y = state.clock.elapsedTime * rotationSpeed;
       ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
+    }
+    // Pulse effect on border
+    if (borderRef.current) {
+      const pulse = 0.3 + Math.sin(state.clock.elapsedTime * 2 + position[0]) * 0.15;
+      (borderRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
     }
   });
 
@@ -38,8 +44,8 @@ function ProjectCard3D({
             opacity={0.85}
           />
         </mesh>
-        {/* Card border glow */}
-        <mesh>
+        {/* Card border glow — pulses */}
+        <mesh ref={borderRef}>
           <boxGeometry args={[1.64, 1.14, 0.02]} />
           <meshStandardMaterial
             color={color}
@@ -74,8 +80,56 @@ function ProjectCard3D({
             <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} />
           </mesh>
         ))}
+        {/* Holographic data particles streaming upward */}
+        <CardParticles color={color} />
       </Float>
     </group>
+  );
+}
+
+/* ─── Holographic Data Particles per Card ─── */
+function CardParticles({ color }: { color: string }) {
+  const count = 15;
+  const mesh = useRef<THREE.InstancedMesh>(null);
+
+  const particles = useMemo(() => {
+    const temp = [];
+    for (let i = 0; i < count; i++) {
+      temp.push({
+        x: (Math.random() - 0.5) * 1.4,
+        y: (Math.random() - 0.5) * 1.0,
+        z: 0.05,
+        speed: 0.5 + Math.random() * 1.0,
+        offset: Math.random() * Math.PI * 2,
+      });
+    }
+    return temp;
+  }, []);
+
+  useFrame((state) => {
+    if (!mesh.current) return;
+    const t = state.clock.elapsedTime;
+    particles.forEach((p, i) => {
+      const matrix = new THREE.Matrix4();
+      // Particles move upward and loop
+      const yOff = ((t * p.speed + p.offset) % 2) - 1;
+      matrix.setPosition(p.x, yOff, p.z);
+      mesh.current!.setMatrixAt(i, matrix);
+    });
+    mesh.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
+      <sphereGeometry args={[0.015, 4, 4]} />
+      <meshStandardMaterial
+        color={color}
+        emissive={color}
+        emissiveIntensity={0.8}
+        transparent
+        opacity={0.5}
+      />
+    </instancedMesh>
   );
 }
 
@@ -99,7 +153,70 @@ function InfiniteGrid() {
   );
 }
 
-/* ─── Main Scene — Dark Tech Blue ─── */
+/* ─── Holographic HUD Frame ─── */
+function HUDFrame() {
+  const lineColor = "#3B82F6";
+  const opacity = 0.15;
+
+  return (
+    <group position={[0, 0.5, 2]}>
+      {/* Top left corner */}
+      <line geometry={new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-5, 3, 0),
+        new THREE.Vector3(-4, 3, 0),
+      ])}>
+        <lineBasicMaterial color={lineColor} transparent opacity={opacity} />
+      </line>
+      <line geometry={new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-5, 3, 0),
+        new THREE.Vector3(-5, 2, 0),
+      ])}>
+        <lineBasicMaterial color={lineColor} transparent opacity={opacity} />
+      </line>
+      {/* Top right corner */}
+      <line geometry={new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(5, 3, 0),
+        new THREE.Vector3(4, 3, 0),
+      ])}>
+        <lineBasicMaterial color={lineColor} transparent opacity={opacity} />
+      </line>
+      <line geometry={new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(5, 3, 0),
+        new THREE.Vector3(5, 2, 0),
+      ])}>
+        <lineBasicMaterial color={lineColor} transparent opacity={opacity} />
+      </line>
+      {/* Bottom left corner */}
+      <line geometry={new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-5, -2, 0),
+        new THREE.Vector3(-4, -2, 0),
+      ])}>
+        <lineBasicMaterial color={lineColor} transparent opacity={opacity} />
+      </line>
+      <line geometry={new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-5, -2, 0),
+        new THREE.Vector3(-5, -1, 0),
+      ])}>
+        <lineBasicMaterial color={lineColor} transparent opacity={opacity} />
+      </line>
+      {/* Bottom right corner */}
+      <line geometry={new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(5, -2, 0),
+        new THREE.Vector3(4, -2, 0),
+      ])}>
+        <lineBasicMaterial color={lineColor} transparent opacity={opacity} />
+      </line>
+      <line geometry={new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(5, -2, 0),
+        new THREE.Vector3(5, -1, 0),
+      ])}>
+        <lineBasicMaterial color={lineColor} transparent opacity={opacity} />
+      </line>
+    </group>
+  );
+}
+
+/* ─── Main Scene ─── */
 export default function ProjectsScene3D() {
   return (
     <div className="w-full h-[300px] md:h-[400px]">
@@ -113,11 +230,14 @@ export default function ProjectsScene3D() {
         <pointLight position={[5, 5, 5]} intensity={0.5} color="#3B82F6" />
         <pointLight position={[-5, 3, 3]} intensity={0.3} color="#14B8A6" />
 
+        <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.3} />
+
         <ProjectCard3D position={[-2.5, 0, 0]} color="#3B82F6" rotationSpeed={0.15} />
         <ProjectCard3D position={[0, 0.5, -1]} color="#14B8A6" rotationSpeed={-0.12} />
         <ProjectCard3D position={[2.5, 0, 0]} color="#818CF8" rotationSpeed={0.1} />
 
         <InfiniteGrid />
+        <HUDFrame />
 
         <fog attach="fog" args={["#0F172A", 8, 20]} />
       </Canvas>

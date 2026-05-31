@@ -44,6 +44,26 @@ const LogicGatesScene3D = dynamic(
   () => import("@/components/3d/LogicGatesScene3D"),
   { ssr: false }
 );
+const GlobalBackground3D = dynamic(
+  () => import("@/components/3d/GlobalBackground3D"),
+  { ssr: false }
+);
+const GlobeScene3D = dynamic(
+  () => import("@/components/3d/GlobeScene3D"),
+  { ssr: false }
+);
+const TimelineScene3D = dynamic(
+  () => import("@/components/3d/TimelineScene3D"),
+  { ssr: false }
+);
+const CircuitBoardScene3D = dynamic(
+  () => import("@/components/3d/CircuitBoardScene3D"),
+  { ssr: false }
+);
+const DNAHelixScene3D = dynamic(
+  () => import("@/components/3d/DNAHelixScene3D"),
+  { ssr: false }
+);
 
 /* ─── Loading Fallback ─── */
 function Scene3DFallback({ height = "400px" }: { height?: string }) {
@@ -913,6 +933,13 @@ function LabSection() {
           <p className="text-muted-foreground max-w-2xl mx-auto">Tools, certifications, and publications that define my engineering practice</p>
         </div>
 
+        {/* 3D Circuit Board */}
+        <div className="mb-12 glass-card rounded-2xl p-4 overflow-hidden">
+          <Suspense fallback={<Scene3DFallback height="350px" />}>
+            <CircuitBoardScene3D />
+          </Suspense>
+        </div>
+
         {/* Lab Equipment Grid */}
         <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
           <FlaskConical size={18} className="text-primary" /> Lab Equipment & EDA Proficiency
@@ -1066,6 +1093,18 @@ function ResearchSection() {
           </div>
         </div>
 
+        {/* 3D DNA Helix — Research */}
+        <div className="mb-12">
+          <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
+            <Microchip size={18} className="text-violet" /> Double Helix — Research DNA
+          </h3>
+          <div className="glass-card-violet rounded-2xl p-4 overflow-hidden">
+            <Suspense fallback={<Scene3DFallback height="400px" />}>
+              <DNAHelixScene3D />
+            </Suspense>
+          </div>
+        </div>
+
         {/* 3D Logic Gates Demo */}
         <div className="mb-16">
           <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
@@ -1200,6 +1239,13 @@ function EducationSection() {
           </h2>
         </div>
 
+        {/* 3D Timeline */}
+        <div className="mb-12 glass-card rounded-2xl p-4 overflow-hidden">
+          <Suspense fallback={<Scene3DFallback height="350px" />}>
+            <TimelineScene3D />
+          </Suspense>
+        </div>
+
         <div className="relative">
           <div className="absolute left-4 md:left-1/2 md:-translate-x-px top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-violet/40" />
           <div className="space-y-12">
@@ -1250,6 +1296,13 @@ function ContactSection() {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Open to internships, collaborations, and challenging engineering problems.
           </p>
+        </div>
+
+        {/* 3D Globe */}
+        <div className="mb-12 glass-card rounded-2xl p-4 overflow-hidden">
+          <Suspense fallback={<Scene3DFallback height="400px" />}>
+            <GlobeScene3D />
+          </Suspense>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4 mb-12">
@@ -1325,6 +1378,10 @@ function Footer() {
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Global 3D Background */}
+      <Suspense fallback={null}>
+        <GlobalBackground3D />
+      </Suspense>
       <ScrollProgressBar />
       <Navigation />
       <main className="flex-1">

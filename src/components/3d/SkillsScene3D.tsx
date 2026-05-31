@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float } from "@react-three/drei";
+import { Float, OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 
 /* ─── Glowing Node ─── */
@@ -10,10 +10,14 @@ function SkillNode({
   position,
   color,
   size = 0.08,
+  label,
+  level,
 }: {
   position: [number, number, number];
   color: string;
   size?: number;
+  label: string;
+  level: number;
 }) {
   const ref = useRef<THREE.Mesh>(null);
 
@@ -24,10 +28,23 @@ function SkillNode({
   });
 
   return (
-    <mesh ref={ref} position={position}>
-      <sphereGeometry args={[size, 16, 16]} />
-      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} transparent opacity={0.9} />
-    </mesh>
+    <group position={position}>
+      <mesh ref={ref}>
+        <sphereGeometry args={[size, 16, 16]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} transparent opacity={0.9} />
+      </mesh>
+      {/* 3D Bar chart below the node */}
+      <mesh position={[0, -0.25 - (level / 100) * 0.3, 0]}>
+        <cylinderGeometry args={[0.02, 0.02, (level / 100) * 0.6, 8]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.3}
+          transparent
+          opacity={0.7}
+        />
+      </mesh>
+    </group>
   );
 }
 
@@ -51,7 +68,7 @@ function ConnectionLine({
   );
 }
 
-/* ─── Rotating Octahedron Core — Dark Tech Blue ─── */
+/* ─── Rotating Octahedron Core ─── */
 function CoreShape() {
   const ref = useRef<THREE.Mesh>(null);
 
@@ -90,20 +107,102 @@ function CoreShape() {
   );
 }
 
-/* ─── Skill Constellation Nodes — Dark Tech Blue Palette ─── */
-const SKILL_NODES: { pos: [number, number, number]; color: string; label: string }[] = [
-  { pos: [2, 1.2, 0.5], color: "#3B82F6", label: "Verilog" },
-  { pos: [-1.8, 1.5, -0.3], color: "#3B82F6", label: "FPGA" },
-  { pos: [0.5, 2, 0.8], color: "#14B8A6", label: "ESP32" },
-  { pos: [-2, -0.8, 0.4], color: "#14B8A6", label: "RTOS" },
-  { pos: [1.5, -1.5, -0.6], color: "#818CF8", label: "React" },
-  { pos: [-0.5, -2, 0.2], color: "#818CF8", label: "Python" },
-  { pos: [2.2, -0.3, -0.8], color: "#F59E0B", label: "PCB" },
-  { pos: [-1.5, 0.5, -1], color: "#F59E0B", label: "MATLAB" },
-  { pos: [0, 0.5, 2], color: "#3B82F6", label: "VHDL" },
-  { pos: [1, -0.8, 1.5], color: "#14B8A6", label: "C/C++" },
-  { pos: [-1.2, -1.2, 1.2], color: "#818CF8", label: "Docker" },
-  { pos: [0.8, 1.5, -1.5], color: "#F59E0B", label: "KiCad" },
+/* ─── Pulsing Energy Waves from Core ─── */
+function EnergyWaves() {
+  const wavesRef = useRef<THREE.Mesh[]>([]);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    wavesRef.current.forEach((mesh, i) => {
+      if (!mesh) return;
+      const phase = (t * 0.3 + i * 0.4) % 2;
+      const scale = 1 + phase * 2;
+      mesh.scale.setScalar(scale);
+      (mesh.material as THREE.MeshStandardMaterial).opacity = Math.max(0, 0.3 - phase * 0.15);
+    });
+  });
+
+  const waveCount = 4;
+  return (
+    <>
+      {Array.from({ length: waveCount }).map((_, i) => (
+        <mesh
+          key={i}
+          ref={(el) => { if (el) wavesRef.current[i] = el; }}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
+          <torusGeometry args={[1, 0.01, 8, 64]} />
+          <meshStandardMaterial
+            color={i % 2 === 0 ? "#3B82F6" : "#14B8A6"}
+            emissive={i % 2 === 0 ? "#3B82F6" : "#14B8A6"}
+            emissiveIntensity={0.5}
+            transparent
+            opacity={0.3}
+          />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+/* ─── Rotating Label Ring ─── */
+function LabelRing() {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = state.clock.elapsedTime * 0.15;
+    }
+  });
+
+  const labels = ["VLSI", "FPGA", "Embedded", "React", "Python", "PCB", "MATLAB", "C/C++", "Docker", "KiCad", "RTOS", "VHDL"];
+  const radius = 3.5;
+
+  return (
+    <group ref={groupRef}>
+      {labels.map((label, i) => {
+        const angle = (i / labels.length) * Math.PI * 2;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        return (
+          <Html
+            key={i}
+            position={[x, 0, z]}
+            center
+            transform
+            style={{ pointerEvents: "none" }}
+          >
+            <div
+              className="font-mono text-[10px] font-bold select-none whitespace-nowrap"
+              style={{
+                color: i % 3 === 0 ? "#3B82F6" : i % 3 === 1 ? "#14B8A6" : "#818CF8",
+                opacity: 0.6,
+                textShadow: `0 0 6px ${i % 3 === 0 ? "rgba(59,130,246,0.3)" : i % 3 === 1 ? "rgba(20,184,166,0.3)" : "rgba(129,140,248,0.3)"}`,
+              }}
+            >
+              {label}
+            </div>
+          </Html>
+        );
+      })}
+    </group>
+  );
+}
+
+/* ─── Skill Constellation Nodes ─── */
+const SKILL_NODES: { pos: [number, number, number]; color: string; label: string; level: number }[] = [
+  { pos: [2, 1.2, 0.5], color: "#3B82F6", label: "Verilog", level: 85 },
+  { pos: [-1.8, 1.5, -0.3], color: "#3B82F6", label: "FPGA", level: 80 },
+  { pos: [0.5, 2, 0.8], color: "#14B8A6", label: "ESP32", level: 85 },
+  { pos: [-2, -0.8, 0.4], color: "#14B8A6", label: "RTOS", level: 78 },
+  { pos: [1.5, -1.5, -0.6], color: "#818CF8", label: "React", level: 80 },
+  { pos: [-0.5, -2, 0.2], color: "#818CF8", label: "Python", level: 85 },
+  { pos: [2.2, -0.3, -0.8], color: "#F59E0B", label: "PCB", level: 75 },
+  { pos: [-1.5, 0.5, -1], color: "#F59E0B", label: "MATLAB", level: 78 },
+  { pos: [0, 0.5, 2], color: "#3B82F6", label: "VHDL", level: 75 },
+  { pos: [1, -0.8, 1.5], color: "#14B8A6", label: "C/C++", level: 88 },
+  { pos: [-1.2, -1.2, 1.2], color: "#818CF8", label: "Docker", level: 70 },
+  { pos: [0.8, 1.5, -1.5], color: "#F59E0B", label: "KiCad", level: 75 },
 ];
 
 const CONNECTIONS: [number, number][] = [
@@ -126,10 +225,12 @@ export default function SkillsScene3D() {
         <pointLight position={[3, 3, 3]} intensity={0.6} color="#3B82F6" />
         <pointLight position={[-3, -2, 2]} intensity={0.4} color="#14B8A6" />
 
+        <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
+
         <CoreShape />
 
         {SKILL_NODES.map((node, i) => (
-          <SkillNode key={i} position={node.pos} color={node.color} size={0.07} />
+          <SkillNode key={i} position={node.pos} color={node.color} size={0.07} label={node.label} level={node.level} />
         ))}
 
         {CONNECTIONS.map(([a, b], i) => (
@@ -140,6 +241,9 @@ export default function SkillsScene3D() {
             color={SKILL_NODES[a].color}
           />
         ))}
+
+        <EnergyWaves />
+        <LabelRing />
 
         <fog attach="fog" args={["#0F172A", 6, 15]} />
       </Canvas>

@@ -561,3 +561,62 @@
     0 48px 72px rgba(0, 0, 0, 0.25),
     0 4px 16px rgba(59, 130, 246, 0.12);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   NEW 3D ENHANCEMENT CLASSES
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Intense 3D depth shadow */
+.depth-shadow-3d {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 8px 16px rgba(0, 0, 0, 0.25),
+    0 24px 48px rgba(0, 0, 0, 0.2),
+    0 48px 96px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(59, 130, 246, 0.08);
+}
+
+/* Perspective container for 3D transforms */
+.perspective-container {
+  perspective: 2000px;
+  transform-style: preserve-3d;
+}
+
+/* 3D hover card — lifts on hover */
+.card-3d-hover {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d-hover:hover {
+  transform: translateZ(20px);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 8px 24px rgba(59, 130, 246, 0.15);
+}
+
+/* Float-3d animation with Z movement */
+@keyframes float-3d {
+  0%, 100% { transform: translateZ(0px) translateY(0px); }
+  25% { transform: translateZ(10px) translateY(-5px); }
+  50% { transform: translateZ(20px) translateY(-10px); }
+  75% { transform: translateZ(10px) translateY(-5px); }
+}
+
+.animate-float-3d {
+  animation: float-3d 6s ease-in-out infinite;
+}
+
+/* Holographic animated border — cycles through Electric Blue → Teal → Indigo */
+@keyframes holo-border-cycle {
+  0% { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 15px rgba(59, 130, 246, 0.15), inset 0 0 15px rgba(59, 130, 246, 0.05); }
+  33% { border-color: rgba(20, 184, 166, 0.5); box-shadow: 0 0 15px rgba(20, 184, 166, 0.15), inset 0 0 15px rgba(20, 184, 166, 0.05); }
+  66% { border-color: rgba(129, 140, 248, 0.5); box-shadow: 0 0 15px rgba(129, 140, 248, 0.15), inset 0 0 15px rgba(129, 140, 248, 0.05); }
+  100% { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 15px rgba(59, 130, 246, 0.15), inset 0 0 15px rgba(59, 130, 246, 0.05); }
+}
+
+.holo-border {
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  animation: holo-border-cycle 6s ease-in-out infinite;
+}
