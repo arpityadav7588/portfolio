@@ -5,7 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 
-/* ─── Glowing Node ─── */
+/* ─── Glowing Node with Pulse ─── */
 function SkillNode({
   position,
   color,
@@ -20,10 +20,16 @@ function SkillNode({
   level: number;
 }) {
   const ref = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     if (ref.current) {
       ref.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 2 + position[0]) * 0.15);
+    }
+    if (glowRef.current) {
+      const pulse = 0.3 + Math.sin(state.clock.elapsedTime * 1.5 + position[0] * 2) * 0.15;
+      (glowRef.current.material as THREE.MeshStandardMaterial).opacity = pulse;
+      glowRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 1.8 + position[1]) * 0.3);
     }
   });
 
@@ -32,6 +38,11 @@ function SkillNode({
       <mesh ref={ref}>
         <sphereGeometry args={[size, 16, 16]} />
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} transparent opacity={0.9} />
+      </mesh>
+      {/* Pulsing glow around node */}
+      <mesh ref={glowRef}>
+        <sphereGeometry args={[size * 2.5, 12, 12]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} transparent opacity={0.15} />
       </mesh>
       {/* 3D Bar chart below the node */}
       <mesh position={[0, -0.25 - (level / 100) * 0.3, 0]}>
@@ -48,7 +59,7 @@ function SkillNode({
   );
 }
 
-/* ─── Connection Lines ─── */
+/* ─── Animated Connection Lines with Data Flow ─── */
 function ConnectionLine({
   start,
   end,
@@ -58,13 +69,44 @@ function ConnectionLine({
   end: [number, number, number];
   color: string;
 }) {
+  const lineRef = useRef<THREE.Line>(null);
+  const pulseRef = useRef<THREE.Mesh>(null);
   const points = [new THREE.Vector3(...start), new THREE.Vector3(...end)];
   const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
 
+  useFrame((state) => {
+    if (lineRef.current) {
+      const mat = lineRef.current.material as THREE.LineBasicMaterial;
+      mat.opacity = 0.2 + Math.sin(state.clock.elapsedTime * 1.5 + start[0]) * 0.1;
+    }
+    if (pulseRef.current) {
+      // Data stream particle flowing along the line
+      const t = (state.clock.elapsedTime * 0.3 + start[0]) % 1;
+      pulseRef.current.position.set(
+        start[0] + (end[0] - start[0]) * t,
+        start[1] + (end[1] - start[1]) * t,
+        start[2] + (end[2] - start[2]) * t
+      );
+    }
+  });
+
   return (
-    <line geometry={lineGeometry}>
-      <lineBasicMaterial color={color} transparent opacity={0.3} />
-    </line>
+    <group>
+      <line ref={lineRef} geometry={lineGeometry}>
+        <lineBasicMaterial color={color} transparent opacity={0.3} />
+      </line>
+      {/* Data stream particle */}
+      <mesh ref={pulseRef} position={start}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.8}
+          transparent
+          opacity={0.6}
+        />
+      </mesh>
+    </group>
   );
 }
 
@@ -189,6 +231,52 @@ function LabelRing() {
   );
 }
 
+/* ─── Data Stream Particles ─── */
+function DataStreamParticles() {
+  const count = 30;
+  const mesh = useRef<THREE.InstancedMesh>(null);
+
+  const particles = useMemo(() => {
+    const temp = [];
+    for (let i = 0; i < count; i++) {
+      temp.push({
+        x: (Math.random() - 0.5) * 6,
+        y: (Math.random() - 0.5) * 4,
+        z: (Math.random() - 0.5) * 4,
+        speed: 0.3 + Math.random() * 0.5,
+        offset: Math.random() * Math.PI * 2,
+      });
+    }
+    return temp;
+  }, []);
+
+  useFrame((state) => {
+    if (!mesh.current) return;
+    const t = state.clock.elapsedTime;
+    particles.forEach((p, i) => {
+      const matrix = new THREE.Matrix4();
+      const yOff = Math.sin(t * p.speed + p.offset) * 0.4;
+      const xOff = Math.cos(t * p.speed * 0.7 + p.offset) * 0.2;
+      matrix.setPosition(p.x + xOff, p.y + yOff, p.z);
+      mesh.current!.setMatrixAt(i, matrix);
+    });
+    mesh.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
+      <sphereGeometry args={[0.015, 6, 6]} />
+      <meshStandardMaterial
+        color="#818CF8"
+        emissive="#818CF8"
+        emissiveIntensity={0.6}
+        transparent
+        opacity={0.4}
+      />
+    </instancedMesh>
+  );
+}
+
 /* ─── Skill Constellation Nodes ─── */
 const SKILL_NODES: { pos: [number, number, number]; color: string; label: string; level: number }[] = [
   { pos: [2, 1.2, 0.5], color: "#3B82F6", label: "Verilog", level: 85 },
@@ -213,6 +301,15 @@ const CONNECTIONS: [number, number][] = [
 
 /* ─── Main Scene ─── */
 export default function SkillsScene3D() {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      // Subtle rotation of the entire constellation
+      groupRef.current.rotation.y = state.clock.elapsedTime * 0.05;
+    }
+  });
+
   return (
     <div className="w-full h-[400px] md:h-[500px]">
       <Canvas
@@ -227,23 +324,26 @@ export default function SkillsScene3D() {
 
         <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
 
-        <CoreShape />
+        <group ref={groupRef}>
+          <CoreShape />
 
-        {SKILL_NODES.map((node, i) => (
-          <SkillNode key={i} position={node.pos} color={node.color} size={0.07} label={node.label} level={node.level} />
-        ))}
+          {SKILL_NODES.map((node, i) => (
+            <SkillNode key={i} position={node.pos} color={node.color} size={0.07} label={node.label} level={node.level} />
+          ))}
 
-        {CONNECTIONS.map(([a, b], i) => (
-          <ConnectionLine
-            key={i}
-            start={SKILL_NODES[a].pos}
-            end={SKILL_NODES[b].pos}
-            color={SKILL_NODES[a].color}
-          />
-        ))}
+          {CONNECTIONS.map(([a, b], i) => (
+            <ConnectionLine
+              key={i}
+              start={SKILL_NODES[a].pos}
+              end={SKILL_NODES[b].pos}
+              color={SKILL_NODES[a].color}
+            />
+          ))}
 
-        <EnergyWaves />
-        <LabelRing />
+          <EnergyWaves />
+          <LabelRing />
+          <DataStreamParticles />
+        </group>
 
         <fog attach="fog" args={["#0F172A", 6, 15]} />
       </Canvas>

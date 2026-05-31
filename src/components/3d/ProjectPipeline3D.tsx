@@ -63,6 +63,34 @@ function SignalPulse({ offset = 0, speed = 1, color = "#3B82F6" }) {
   );
 }
 
+/* ─── Hexagonal Platform under each pipeline node ─── */
+function HexPlatform({ position, color, status }: { position: [number, number, number]; color: string; status: string }) {
+  const ref = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (ref.current) {
+      const pulse = status === "active" ? 0.3 + Math.sin(state.clock.elapsedTime * 2) * 0.15 : 0.2;
+      (ref.current.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
+    }
+  });
+
+  const glowColor = status === "completed" ? "#14B8A6" : status === "active" ? "#F59E0B" : "#334155";
+
+  return (
+    <mesh ref={ref} position={[position[0], position[1] - 0.6, position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+      <circleGeometry args={[0.5, 6]} />
+      <meshStandardMaterial
+        color={color}
+        emissive={glowColor}
+        emissiveIntensity={0.2}
+        transparent
+        opacity={0.25}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
+
 /* ─── Pipeline Node — Each project station ─── */
 function PipelineNode({
   position,
@@ -85,11 +113,17 @@ function PipelineNode({
       const bob = Math.sin(state.clock.elapsedTime * 1.2 + index * 0.8) * 0.08;
       nodeRef.current.position.y = position[1] + bob;
     }
-    if (ringRef.current && status === "active") {
-      const pulse = 1 + Math.sin(state.clock.elapsedTime * 3 + index) * 0.2;
+    if (ringRef.current) {
+      const rotSpeed = status === "active" ? 2 : status === "completed" ? 0.8 : 0.3;
+      ringRef.current.rotation.z = state.clock.elapsedTime * rotSpeed;
+      const pulse = status === "active"
+        ? 1 + Math.sin(state.clock.elapsedTime * 3 + index) * 0.2
+        : 1;
       ringRef.current.scale.setScalar(pulse);
     }
   });
+
+  const statusColor = status === "completed" ? "#14B8A6" : status === "active" ? "#F59E0B" : "#334155";
 
   return (
     <group ref={nodeRef} position={position}>
@@ -98,26 +132,24 @@ function PipelineNode({
         <sphereGeometry args={[0.18, 20, 20]} />
         <meshStandardMaterial
           color={color}
-          emissive={color}
+          emissive={statusColor}
           emissiveIntensity={status === "upcoming" ? 0.3 : 0.7}
           transparent
           opacity={status === "upcoming" ? 0.5 : 0.9}
         />
       </mesh>
 
-      {/* Pulse ring for active projects */}
-      {status === "active" && (
-        <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.3, 0.015, 8, 32]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.5}
-            transparent
-            opacity={0.4}
-          />
-        </mesh>
-      )}
+      {/* Rotating ring around every node */}
+      <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.32, 0.012, 8, 32]} />
+        <meshStandardMaterial
+          color={statusColor}
+          emissive={statusColor}
+          emissiveIntensity={status === "upcoming" ? 0.15 : 0.4}
+          transparent
+          opacity={status === "upcoming" ? 0.2 : 0.45}
+        />
+      </mesh>
 
       {/* Completed checkmark indicator */}
       {status === "completed" && (
@@ -127,6 +159,18 @@ function PipelineNode({
             color="#14B8A6"
             emissive="#14B8A6"
             emissiveIntensity={0.8}
+          />
+        </mesh>
+      )}
+
+      {/* Active status indicator — amber glow */}
+      {status === "active" && (
+        <mesh position={[0, 0.3, 0]}>
+          <sphereGeometry args={[0.06, 8, 8]} />
+          <meshStandardMaterial
+            color="#F59E0B"
+            emissive="#F59E0B"
+            emissiveIntensity={1.0}
           />
         </mesh>
       )}
@@ -143,7 +187,10 @@ function PipelineNode({
         />
       </mesh>
 
-      {/* Label — only show on wider screens / low index count */}
+      {/* Hexagonal platform below */}
+      <HexPlatform position={position} color={color} status={status} />
+
+      {/* Label */}
       <Html center position={[0, -0.5, 0]} transform occlude={false}>
         <div className="text-center select-none pointer-events-none whitespace-nowrap">
           <div
@@ -165,7 +212,7 @@ function PipelineNode({
 
 /* ─── Floating Data Chips around the pipeline ─── */
 function DataChips() {
-  const count = 30;
+  const count = 50;
   const mesh = useRef<THREE.InstancedMesh>(null);
 
   const chips = useMemo(() => {
@@ -208,6 +255,37 @@ function DataChips() {
   );
 }
 
+/* ─── Energy Beam between nodes ─── */
+function EnergyBeam({ start, end, color }: { start: [number, number, number]; end: [number, number, number]; color: string }) {
+  const ref = useRef<THREE.Mesh>(null);
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const length = Math.sqrt(dx * dx + dy * dy);
+  const midX = (start[0] + end[0]) / 2;
+  const midY = (start[1] + end[1]) / 2;
+  const angle = Math.atan2(dy, dx);
+
+  useFrame((state) => {
+    if (ref.current) {
+      const pulse = 0.3 + Math.sin(state.clock.elapsedTime * 3 + start[0]) * 0.2;
+      (ref.current.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
+    }
+  });
+
+  return (
+    <mesh ref={ref} position={[midX, midY, 0]} rotation={[0, 0, angle]}>
+      <boxGeometry args={[length, 0.02, 0.02]} />
+      <meshStandardMaterial
+        color={color}
+        emissive={color}
+        emissiveIntensity={0.3}
+        transparent
+        opacity={0.35}
+      />
+    </mesh>
+  );
+}
+
 /* ─── Arrow indicators between nodes ─── */
 function FlowArrow({ position, color }: { position: [number, number, number]; color: string }) {
   const ref = useRef<THREE.Mesh>(null);
@@ -233,6 +311,43 @@ function FlowArrow({ position, color }: { position: [number, number, number]; co
   );
 }
 
+/* ─── Grid Floor below the pipeline ─── */
+function GridFloor() {
+  const gridRef = useRef<THREE.Group>(null);
+
+  const lines = useMemo(() => {
+    const arr: { points: THREE.Vector3[]; color: string }[] = [];
+    const size = 16;
+    const divisions = 20;
+    const step = size / divisions;
+    for (let i = 0; i <= divisions; i++) {
+      const pos = -size / 2 + i * step;
+      arr.push({
+        points: [new THREE.Vector3(pos, 0, -size / 2), new THREE.Vector3(pos, 0, size / 2)],
+        color: "#3B82F6",
+      });
+      arr.push({
+        points: [new THREE.Vector3(-size / 2, 0, pos), new THREE.Vector3(size / 2, 0, pos)],
+        color: "#3B82F6",
+      });
+    }
+    return arr;
+  }, []);
+
+  return (
+    <group ref={gridRef} position={[0, -2.2, 0]}>
+      {lines.map((line, i) => {
+        const geo = new THREE.BufferGeometry().setFromPoints(line.points);
+        return (
+          <line key={i} geometry={geo}>
+            <lineBasicMaterial color={line.color} transparent opacity={0.06} />
+          </line>
+        );
+      })}
+    </group>
+  );
+}
+
 /* ─── Rotating Pipeline Group ─── */
 function PipelineGroup() {
   const groupRef = useRef<THREE.Group>(null);
@@ -240,7 +355,8 @@ function PipelineGroup() {
   useFrame((state) => {
     if (groupRef.current) {
       groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.15) * 0.08;
-      groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.03;
+      // Slight tilt for better 3D perspective
+      groupRef.current.rotation.x = 0.15 + Math.sin(state.clock.elapsedTime * 0.1) * 0.03;
     }
   });
 
@@ -256,6 +372,12 @@ function PipelineGroup() {
   const nodeSpacing = 2.2;
   const startX = -((pipelineProjects.length - 1) * nodeSpacing) / 2;
 
+  const nodePositions = pipelineProjects.map((_, i) => {
+    const x = startX + i * nodeSpacing;
+    const yOffset = i % 2 === 0 ? 1.0 : -1.0;
+    return [x, yOffset, 0] as [number, number, number];
+  });
+
   return (
     <Float speed={0.5} rotationIntensity={0.03} floatIntensity={0.1}>
       <group ref={groupRef}>
@@ -267,20 +389,26 @@ function PipelineGroup() {
         <SignalPulse offset={6} speed={1.0} color="#818CF8" />
 
         {/* Pipeline nodes (alternating above/below track) */}
-        {pipelineProjects.map((proj, i) => {
-          const x = startX + i * nodeSpacing;
-          const yOffset = i % 2 === 0 ? 1.0 : -1.0;
-          return (
-            <PipelineNode
-              key={i}
-              position={[x, yOffset, 0]}
-              color={proj.color}
-              index={i}
-              label={proj.label}
-              status={proj.status}
-            />
-          );
-        })}
+        {pipelineProjects.map((proj, i) => (
+          <PipelineNode
+            key={i}
+            position={nodePositions[i]}
+            color={proj.color}
+            index={i}
+            label={proj.label}
+            status={proj.status}
+          />
+        ))}
+
+        {/* Energy beams between nodes */}
+        {pipelineProjects.slice(0, -1).map((proj, i) => (
+          <EnergyBeam
+            key={`beam-${i}`}
+            start={nodePositions[i]}
+            end={nodePositions[i + 1]}
+            color={proj.color}
+          />
+        ))}
 
         {/* Flow arrows between nodes */}
         {pipelineProjects.slice(0, -1).map((_, i) => {
@@ -289,6 +417,7 @@ function PipelineGroup() {
         })}
 
         <DataChips />
+        <GridFloor />
       </group>
     </Float>
   );

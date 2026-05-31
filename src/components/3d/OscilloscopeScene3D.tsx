@@ -5,7 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Float } from "@react-three/drei";
 import * as THREE from "three";
 
-/* ─── 3D Oscilloscope Screen — Dark Tech Blue ─── */
+/* ─── 3D Oscilloscope Screen — Dark Tech Blue Enhanced ─── */
 function OscilloscopeScreen() {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -40,15 +40,33 @@ function OscilloscopeScreen() {
           // Background — deep navy screen
           vec3 bgColor = vec3(0.059, 0.09, 0.165);
           
-          // Grid lines
+          // Minor grid lines
           float gridX = smoothstep(0.02, 0.0, abs(fract(uv.x * 10.0) - 0.5) - 0.48);
           float gridY = smoothstep(0.02, 0.0, abs(fract(uv.y * 8.0) - 0.5) - 0.48);
           float grid = max(gridX, gridY) * 0.15;
+          
+          // Major grid lines (every 5 divisions)
+          float majorGridX = smoothstep(0.008, 0.0, abs(fract(uv.x * 2.0) - 0.5) - 0.495);
+          float majorGridY = smoothstep(0.008, 0.0, abs(fract(uv.y * 1.6) - 0.5) - 0.495);
+          float majorGrid = max(majorGridX, majorGridY) * 0.25;
           
           // Center crosshair (brighter)
           float centerX = smoothstep(0.005, 0.0, abs(uv.x - 0.5));
           float centerY = smoothstep(0.005, 0.0, abs(uv.y - 0.5));
           float crosshair = max(centerX, centerY) * 0.3;
+          
+          // Tick marks on center crosshair
+          float tickX = 0.0;
+          for (float i = -5.0; i <= 5.0; i += 1.0) {
+            float tx = 0.5 + i * 0.05;
+            tickX += smoothstep(0.003, 0.0, abs(uv.x - tx)) * smoothstep(0.015, 0.01, abs(uv.y - 0.5));
+          }
+          float tickY = 0.0;
+          for (float i = -4.0; i <= 4.0; i += 1.0) {
+            float ty = 0.5 + i * 0.0625;
+            tickY += smoothstep(0.003, 0.0, abs(uv.y - ty)) * smoothstep(0.015, 0.01, abs(uv.x - 0.5));
+          }
+          float ticks = (tickX + tickY) * 0.3;
           
           // Waveform 1 — Electric Blue main signal
           float wave1Y = 0.5 + sineWave(uv.x, 12.0, 0.25, uTime * 3.0) 
@@ -65,7 +83,9 @@ function OscilloscopeScreen() {
           // Composite
           vec3 color = bgColor;
           color += vec3(grid) * uColor1 * 0.5;
+          color += vec3(majorGrid) * uColor1;
           color += vec3(crosshair) * uColor1;
+          color += vec3(ticks) * uColor1 * 0.5;
           color += wave1 * uColor1 * 1.5;
           color += wave1Glow * uColor1;
           color += wave2 * uColor2 * 1.2;
@@ -140,6 +160,15 @@ function OscilloscopeScreen() {
             emissive="#3B82F6"
             emissiveIntensity={0.3}
           />
+        </mesh>
+        {/* CH1/CH2 indicators */}
+        <mesh position={[-0.9, 0.75, 0.09]}>
+          <boxGeometry args={[0.3, 0.08, 0.005]} />
+          <meshStandardMaterial color="#3B82F6" emissive="#3B82F6" emissiveIntensity={0.5} />
+        </mesh>
+        <mesh position={[-0.5, 0.75, 0.09]}>
+          <boxGeometry args={[0.3, 0.08, 0.005]} />
+          <meshStandardMaterial color="#14B8A6" emissive="#14B8A6" emissiveIntensity={0.5} />
         </mesh>
       </group>
     </Float>

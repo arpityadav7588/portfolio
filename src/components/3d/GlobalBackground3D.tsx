@@ -37,7 +37,6 @@ function FloatingShapes() {
       const s = shapes[i];
       child.position.x = s.position[0] + Math.sin(t * s.speed + s.rotation) * 2 + t * s.driftX;
       child.position.y = s.position[1] + Math.cos(t * s.speed * 0.7 + s.rotation) * 1.5 + t * s.driftY;
-      // Wrap around to keep shapes in view
       if (child.position.x > 20) child.position.x -= 40;
       if (child.position.x < -20) child.position.x += 40;
       if (child.position.y > 15) child.position.y -= 30;
@@ -66,7 +65,7 @@ function FloatingShapes() {
               color={s.color}
               wireframe
               transparent
-              opacity={0.08}
+              opacity={0.12}
               emissive={s.color}
               emissiveIntensity={0.1}
             />
@@ -79,7 +78,7 @@ function FloatingShapes() {
 
 /* ─── Particle Field ─── */
 function ParticleField() {
-  const count = 150;
+  const count = 250;
   const mesh = useRef<THREE.InstancedMesh>(null);
 
   const particles = useMemo(() => {
@@ -101,7 +100,6 @@ function ParticleField() {
   useFrame((state) => {
     if (!mesh.current) return;
     const t = state.clock.elapsedTime;
-    // Scroll position affects particles subtly
     const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
     const scrollFactor = scrollY * 0.001;
 
@@ -129,6 +127,31 @@ function ParticleField() {
   );
 }
 
+/* ─── Slow-Rotating Background Ring ─── */
+function BackgroundRing() {
+  const ref = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (ref.current) {
+      ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.05) * 0.3 + Math.PI / 4;
+      ref.current.rotation.y = state.clock.elapsedTime * 0.03;
+    }
+  });
+
+  return (
+    <mesh ref={ref} position={[0, 0, -15]}>
+      <torusGeometry args={[12, 0.05, 8, 64]} />
+      <meshStandardMaterial
+        color="#3B82F6"
+        emissive="#3B82F6"
+        emissiveIntensity={0.15}
+        transparent
+        opacity={0.08}
+      />
+    </mesh>
+  );
+}
+
 /* ─── Main Global Background Scene ─── */
 export default function GlobalBackground3D() {
   return (
@@ -153,6 +176,7 @@ export default function GlobalBackground3D() {
 
       <FloatingShapes />
       <ParticleField />
+      <BackgroundRing />
 
       <fog attach="fog" args={["#0F172A", 15, 40]} />
     </Canvas>

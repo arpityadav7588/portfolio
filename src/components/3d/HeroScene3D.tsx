@@ -10,7 +10,6 @@ function MouseCamera() {
   const targetPos = useRef({ x: 0, y: 0 });
 
   useFrame((state) => {
-    // Subtle camera shift based on pointer
     const pointer = state.pointer;
     targetPos.current.x = pointer.x * 0.5;
     targetPos.current.y = pointer.y * 0.3;
@@ -71,22 +70,18 @@ function ICChip() {
 
   return (
     <group ref={groupRef} position={[2.5, 0, 0]}>
-      {/* Chip body — Deep Navy */}
       <mesh castShadow>
         <boxGeometry args={[1.2, 0.2, 1.2]} />
         <meshStandardMaterial color="#1E293B" metalness={0.8} roughness={0.2} />
       </mesh>
-      {/* Chip marking dot — Electric Blue accent */}
       <mesh position={[-0.4, 0.11, -0.4]}>
         <sphereGeometry args={[0.06, 16, 16]} />
         <meshStandardMaterial color="#3B82F6" metalness={0.5} roughness={0.3} emissive="#3B82F6" emissiveIntensity={0.2} />
       </mesh>
-      {/* Chip text marking */}
       <mesh position={[0, 0.105, 0]}>
         <boxGeometry args={[0.8, 0.01, 0.6]} />
         <meshStandardMaterial color="#334155" metalness={0.6} roughness={0.4} />
       </mesh>
-      {/* Pins */}
       <instancedMesh ref={pinsRef} args={[undefined, undefined, pinCount]}>
         <boxGeometry args={[0.05, 0.08, 0.35]} />
         <meshStandardMaterial color="#94A3B8" metalness={0.9} roughness={0.1} />
@@ -112,7 +107,6 @@ function PCBBoard() {
         <boxGeometry args={[2.5, 0.08, 1.8]} />
         <meshStandardMaterial color="#0F172A" metalness={0.3} roughness={0.7} />
       </mesh>
-      {/* Copper traces — Electric Blue glow */}
       {[0, 0.3, 0.6, -0.3, -0.6].map((x, i) => (
         <mesh
           key={i}
@@ -129,7 +123,6 @@ function PCBBoard() {
           />
         </mesh>
       ))}
-      {/* SMD components */}
       {[-2.3, -1.8, -2.0, -3.5, -3.8].map((x, i) => (
         <mesh key={`smd-${i}`} position={[x, 0.58, -1 + (i % 2 === 0 ? 0.4 : -0.3)]} rotation={[-Math.PI / 4, 0, 0]}>
           <boxGeometry args={[0.15, 0.06, 0.08]} />
@@ -159,9 +152,9 @@ function WaveformRing({ radius, speed, color }: { radius: number; speed: number;
   );
 }
 
-/* ─── Floating Signal Particles — Electric Blue ─── */
+/* ─── Floating Signal Particles — Multi-color ─── */
 function SignalParticles() {
-  const count = 250;
+  const count = 400;
   const mesh = useRef<THREE.InstancedMesh>(null);
 
   const particles = useMemo(() => {
@@ -172,9 +165,26 @@ function SignalParticles() {
       const z = (Math.random() - 0.5) * 12;
       const speed = 0.5 + Math.random() * 1.5;
       const offset = Math.random() * Math.PI * 2;
-      temp.push({ x, y, z, speed, offset });
+      // Color variety: primary, teal, indigo
+      const colorType = i % 3;
+      temp.push({ x, y, z, speed, offset, colorType });
     }
     return temp;
+  }, []);
+
+  // We need to set colors per instance
+  const colorArray = useMemo(() => {
+    const colors = new Float32Array(count * 3);
+    const c1 = new THREE.Color("#3B82F6");
+    const c2 = new THREE.Color("#14B8A6");
+    const c3 = new THREE.Color("#818CF8");
+    for (let i = 0; i < count; i++) {
+      const c = i % 3 === 0 ? c1 : i % 3 === 1 ? c2 : c3;
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+    }
+    return colors;
   }, []);
 
   useFrame((state) => {
@@ -192,7 +202,9 @@ function SignalParticles() {
 
   return (
     <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
-      <sphereGeometry args={[0.02, 8, 8]} />
+      <sphereGeometry args={[0.02, 8, 8]}>
+        <instancedBufferAttribute attach="attributes-color" args={[colorArray, 3]} />
+      </sphereGeometry>
       <meshStandardMaterial color="#3B82F6" emissive="#3B82F6" emissiveIntensity={0.8} transparent opacity={0.6} />
     </instancedMesh>
   );
@@ -227,6 +239,32 @@ function GlowingOrb() {
   );
 }
 
+/* ─── Pulsing Center Glow ─── */
+function CenterGlow() {
+  const ref = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (ref.current) {
+      const pulse = 0.5 + Math.sin(state.clock.elapsedTime * 1.5) * 0.3;
+      ref.current.scale.setScalar(pulse);
+      (ref.current.material as THREE.MeshStandardMaterial).opacity = 0.08 + Math.sin(state.clock.elapsedTime * 1.5) * 0.04;
+    }
+  });
+
+  return (
+    <mesh ref={ref} position={[0, 0, -1]}>
+      <sphereGeometry args={[2, 16, 16]} />
+      <meshStandardMaterial
+        color="#3B82F6"
+        emissive="#3B82F6"
+        emissiveIntensity={0.3}
+        transparent
+        opacity={0.08}
+      />
+    </mesh>
+  );
+}
+
 /* ─── Floating Holographic Ring ─── */
 function HolographicRing() {
   const ref = useRef<THREE.Mesh>(null);
@@ -252,6 +290,144 @@ function HolographicRing() {
         />
       </mesh>
     </Float>
+  );
+}
+
+/* ─── Second Holographic Ring (different angle) ─── */
+function HolographicRing2() {
+  const ref = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (ref.current) {
+      ref.current.rotation.x = Math.cos(state.clock.elapsedTime * 0.25) * 0.6;
+      ref.current.rotation.y = -state.clock.elapsedTime * 0.15;
+      ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.2) * 0.4;
+    }
+  });
+
+  return (
+    <Float speed={0.8} rotationIntensity={0.15} floatIntensity={0.2}>
+      <mesh ref={ref} position={[0, 1.2, -3]}>
+        <torusGeometry args={[1.8, 0.01, 16, 64]} />
+        <meshStandardMaterial
+          color="#818CF8"
+          emissive="#818CF8"
+          emissiveIntensity={0.4}
+          transparent
+          opacity={0.3}
+        />
+      </mesh>
+    </Float>
+  );
+}
+
+/* ─── Radar Sweep Effect ─── */
+function RadarSweep() {
+  const ref = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (ref.current) {
+      ref.current.rotation.z = state.clock.elapsedTime * 0.5;
+    }
+  });
+
+  const shaderData = useMemo(
+    () => ({
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color("#3B82F6") },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        void main() {
+          vec2 center = vUv - 0.5;
+          float angle = atan(center.y, center.x);
+          float dist = length(center);
+          // Radar sweep: bright near the sweep line, fading behind
+          float sweep = smoothstep(0.0, 0.1, fract((angle / 6.2832 + uTime * 0.08)));
+          float alpha = (1.0 - sweep) * (1.0 - dist * 2.0) * 0.12;
+          alpha = max(alpha, 0.0);
+          gl_FragColor = vec4(uColor, alpha);
+        }
+      `,
+    }),
+    []
+  );
+
+  useFrame((state) => {
+    if (ref.current) {
+      (ref.current.material as THREE.ShaderMaterial).uniforms.uTime.value = state.clock.elapsedTime;
+    }
+  });
+
+  return (
+    <mesh ref={ref} position={[0, 0, -4]} rotation={[0, 0, 0]}>
+      <planeGeometry args={[12, 12]} />
+      <shaderMaterial
+        transparent
+        depthWrite={false}
+        uniforms={shaderData.uniforms}
+        vertexShader={shaderData.vertexShader}
+        fragmentShader={shaderData.fragmentShader}
+      />
+    </mesh>
+  );
+}
+
+/* ─── Circuit Trace Animation ─── */
+function CircuitTraces() {
+  const groupRef = useRef<THREE.Group>(null);
+  const matRefs = useRef<THREE.LineBasicMaterial[]>([]);
+
+  const traces = useMemo(() => {
+    const arr: { points: THREE.Vector3[]; color: string }[] = [];
+    // Horizontal traces that light up
+    for (let i = 0; i < 8; i++) {
+      const y = -4 + i * 1.2;
+      const pts: THREE.Vector3[] = [];
+      for (let x = -8; x <= 8; x += 0.3) {
+        pts.push(new THREE.Vector3(x, y + Math.sin(x * 2 + i) * 0.1, -6));
+      }
+      arr.push({ points: pts, color: i % 2 === 0 ? "#3B82F6" : "#14B8A6" });
+    }
+    return arr;
+  }, []);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    matRefs.current.forEach((mat, i) => {
+      if (!mat) return;
+      // Sequential lighting effect
+      const phase = (t * 1.5 - i * 0.3) % 3;
+      mat.opacity = phase > 0 && phase < 1 ? 0.15 + 0.15 * (1 - phase) : 0.05;
+    });
+  });
+
+  return (
+    <group ref={groupRef}>
+      {traces.map((trace, i) => {
+        const geo = new THREE.BufferGeometry().setFromPoints(trace.points);
+        return (
+          <line key={i} geometry={geo}>
+            <lineBasicMaterial
+              ref={(el) => { if (el) matRefs.current[i] = el; }}
+              color={trace.color}
+              transparent
+              opacity={0.05}
+            />
+          </line>
+        );
+      })}
+    </group>
   );
 }
 
@@ -288,7 +464,6 @@ function BinaryColumn({ x, z, bits, speed }: { x: number; z: number; bits: strin
 
   useFrame((state) => {
     if (groupRef.current) {
-      // Subtle float
       groupRef.current.position.y = Math.sin(state.clock.elapsedTime * speed) * 0.3;
     }
   });
@@ -385,7 +560,6 @@ function ElectricArcs() {
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       posAttr.needsUpdate = true;
 
-      // Flicker opacity
       const mat = line.material as THREE.LineBasicMaterial;
       mat.opacity = 0.3 + Math.random() * 0.5;
     });
@@ -395,7 +569,7 @@ function ElectricArcs() {
     <group>
       {arcData.map((arc, i) => {
         const geo = new THREE.BufferGeometry();
-        const positions = new Float32Array(33); // 11 points * 3
+        const positions = new Float32Array(33);
         geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
         return (
           <line
@@ -463,7 +637,7 @@ function HexagonalGrid() {
   );
 }
 
-/* ─── Main 3D Hero Scene — Dark Tech Blue ─── */
+/* ─── Main 3D Hero Scene — Dark Tech Blue Enhanced ─── */
 export default function HeroScene3D() {
   return (
     <div className="absolute inset-0 z-0">
@@ -474,15 +648,10 @@ export default function HeroScene3D() {
         style={{ background: "transparent" }}
       >
         <ambientLight intensity={0.12} />
-        {/* Electric Blue key light */}
         <directionalLight position={[5, 5, 5]} intensity={0.5} color="#3B82F6" />
-        {/* Teal fill light */}
         <directionalLight position={[-5, 3, -5]} intensity={0.3} color="#14B8A6" />
-        {/* Indigo rim light */}
         <directionalLight position={[0, -3, 5]} intensity={0.15} color="#818CF8" />
-        {/* Electric Blue point light */}
         <pointLight position={[0, 0, 3]} intensity={0.8} color="#3B82F6" distance={15} />
-        {/* Teal accent point light */}
         <pointLight position={[3, -2, -2]} intensity={0.4} color="#14B8A6" distance={10} />
 
         <MouseCamera />
@@ -490,14 +659,17 @@ export default function HeroScene3D() {
         <ICChip />
         <PCBBoard />
         <GlowingOrb />
+        <CenterGlow />
         <SignalParticles />
         <HolographicRing />
+        <HolographicRing2 />
 
         <WaveformRing radius={3.5} speed={0.2} color="#3B82F6" />
         <WaveformRing radius={4.2} speed={-0.15} color="#14B8A6" />
         <WaveformRing radius={5} speed={0.1} color="#818CF8" />
 
-        {/* New enhancement elements */}
+        <RadarSweep />
+        <CircuitTraces />
         <DataStream />
         <ElectricArcs />
         <HexagonalGrid />

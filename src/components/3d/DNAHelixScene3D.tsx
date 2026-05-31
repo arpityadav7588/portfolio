@@ -66,7 +66,6 @@ function HelixRungs() {
       const t = i / rungCount;
       const angle = t * turns * Math.PI * 2;
       const y = t * height - height / 2;
-      // Calculate endpoints of the rung
       const x1 = Math.cos(angle) * radius;
       const z1 = Math.sin(angle) * radius;
       const x2 = Math.cos(angle + Math.PI) * radius;
@@ -129,7 +128,7 @@ function HelixRungs() {
 
 /* ─── Background Particles ─── */
 function HelixParticles() {
-  const count = 50;
+  const count = 80;
   const mesh = useRef<THREE.InstancedMesh>(null);
 
   const particles = useMemo(() => {
@@ -152,7 +151,8 @@ function HelixParticles() {
     particles.forEach((p, i) => {
       const matrix = new THREE.Matrix4();
       const yOff = Math.sin(t * p.speed + p.offset) * 0.3;
-      matrix.setPosition(p.x, p.y + yOff, p.z);
+      const xOff = Math.cos(t * p.speed * 0.6 + p.offset) * 0.15;
+      matrix.setPosition(p.x + xOff, p.y + yOff, p.z);
       mesh.current!.setMatrixAt(i, matrix);
     });
     mesh.current.instanceMatrix.needsUpdate = true;
@@ -167,6 +167,56 @@ function HelixParticles() {
         emissiveIntensity={0.4}
         transparent
         opacity={0.3}
+      />
+    </instancedMesh>
+  );
+}
+
+/* ─── Floating Orbital Particles Around Helix ─── */
+function OrbitalParticles() {
+  const count = 20;
+  const mesh = useRef<THREE.InstancedMesh>(null);
+
+  const orbitals = useMemo(() => {
+    const temp = [];
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const y = (Math.random() - 0.5) * 6;
+      temp.push({
+        angle,
+        y,
+        radius: 1.2 + Math.random() * 0.5,
+        speed: 0.3 + Math.random() * 0.4,
+        ySpeed: 0.1 + Math.random() * 0.2,
+      });
+    }
+    return temp;
+  }, []);
+
+  useFrame((state) => {
+    if (!mesh.current) return;
+    const t = state.clock.elapsedTime;
+    orbitals.forEach((o, i) => {
+      const matrix = new THREE.Matrix4();
+      const a = o.angle + t * o.speed;
+      const x = Math.cos(a) * o.radius;
+      const z = Math.sin(a) * o.radius;
+      const yOff = o.y + Math.sin(t * o.ySpeed) * 0.5;
+      matrix.setPosition(x, yOff, z);
+      mesh.current!.setMatrixAt(i, matrix);
+    });
+    mesh.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
+      <sphereGeometry args={[0.025, 8, 8]} />
+      <meshStandardMaterial
+        color="#14B8A6"
+        emissive="#14B8A6"
+        emissiveIntensity={0.6}
+        transparent
+        opacity={0.4}
       />
     </instancedMesh>
   );
@@ -196,6 +246,7 @@ export default function DNAHelixScene3D() {
         </Float>
 
         <HelixParticles />
+        <OrbitalParticles />
 
         <fog attach="fog" args={["#0F172A", 8, 18]} />
       </Canvas>

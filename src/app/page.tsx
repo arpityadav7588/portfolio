@@ -194,27 +194,64 @@ function OscWaveform() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   NAVIGATION
+   NAVIGATION — Enhanced with Active Section Detection
    ═══════════════════════════════════════════════════════════════════ */
+const NAV_ITEMS = [
+  { label: "About", href: "#about" },
+  { label: "Gallery", href: "#gallery" },
+  { label: "Skills", href: "#skills" },
+  { label: "Protocols", href: "#protocols" },
+  { label: "Projects", href: "#projects" },
+  { label: "Lab", href: "#lab" },
+  { label: "Research", href: "#research" },
+  { label: "Education", href: "#education" },
+  { label: "Contact", href: "#contact" },
+];
+
+/* Shared active section hook */
+function useActiveSection(sectionIds: string[]) {
+  const [activeSection, setActiveSection] = useState<string>("");
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-80px 0px -50% 0px", threshold: 0 }
+    );
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [sectionIds]);
+  return activeSection;
+}
+
 function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const sectionIds = NAV_ITEMS.map((it) => it.href.replace("#", ""));
+  const activeSection = useActiveSection(sectionIds);
+
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", h);
     return () => window.removeEventListener("scroll", h);
   }, []);
-  const items = [
-    { label: "About", href: "#about" },
-    { label: "Gallery", href: "#gallery" },
-    { label: "Skills", href: "#skills" },
-    { label: "Protocols", href: "#protocols" },
-    { label: "Projects", href: "#projects" },
-    { label: "Lab", href: "#lab" },
-    { label: "Research", href: "#research" },
-    { label: "Education", href: "#education" },
-    { label: "Contact", href: "#contact" },
-  ];
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const el = document.getElementById(href.replace("#", ""));
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+    setMobileOpen(false);
+  };
+
   return (
     <motion.nav
       initial={{ y: -100 }}
@@ -232,12 +269,28 @@ function Navigation() {
             <Cpu size={20} /> AY_
           </a>
           <div className="hidden md:flex items-center gap-1">
-            {items.map((it) => (
-              <a key={it.href} href={it.href} className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors relative group">
-                {it.label}
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
-              </a>
-            ))}
+            {NAV_ITEMS.map((it) => {
+              const isActive = activeSection === it.href.replace("#", "");
+              return (
+                <a
+                  key={it.href}
+                  href={it.href}
+                  onClick={(e) => handleClick(e, it.href)}
+                  className={`px-3 py-2 text-sm font-medium transition-colors relative group ${
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-primary"
+                  }`}
+                >
+                  {it.label}
+                  <span
+                    className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-primary transition-all duration-300 ${
+                      isActive ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
+                  />
+                </a>
+              );
+            })}
           </div>
           <Button variant="ghost" size="icon" className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -245,15 +298,62 @@ function Navigation() {
         </div>
         {mobileOpen && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="md:hidden pb-4">
-            {items.map((it) => (
-              <a key={it.href} href={it.href} onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                {it.label}
-              </a>
-            ))}
+            {NAV_ITEMS.map((it) => {
+              const isActive = activeSection === it.href.replace("#", "");
+              return (
+                <a
+                  key={it.href}
+                  href={it.href}
+                  onClick={(e) => handleClick(e, it.href)}
+                  className={`block px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
+                  }`}
+                >
+                  {it.label}
+                </a>
+              );
+            })}
           </motion.div>
         )}
       </div>
     </motion.nav>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FLOATING SIDE NAVIGATION — Dot Indicators
+   ═══════════════════════════════════════════════════════════════════ */
+function FloatingSideNav() {
+  const sectionIds = NAV_ITEMS.map((it) => it.href.replace("#", ""));
+  const activeSection = useActiveSection(sectionIds);
+
+  const handleClick = (href: string) => {
+    const el = document.getElementById(href.replace("#", ""));
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  return (
+    <nav className="floating-side-nav hidden md:flex" aria-label="Section navigation">
+      {NAV_ITEMS.map((it, i) => {
+        const isActive = activeSection === it.href.replace("#", "");
+        return (
+          <div key={it.href} className="flex flex-col items-center">
+            {i > 0 && <div className="nav-line" />}
+            <button
+              onClick={() => handleClick(it.href)}
+              className={`nav-dot ${isActive ? "active" : ""}`}
+              aria-label={it.label}
+              aria-current={isActive ? "true" : undefined}
+            >
+              <span className="tooltip">{it.label}</span>
+            </button>
+            {i < NAV_ITEMS.length - 1 && <div className="nav-line" />}
+          </div>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -1522,6 +1622,8 @@ export default function Home() {
       </Suspense>
       <ScrollProgressBar />
       <Navigation />
+      <FloatingSideNav />
+      <div className="scan-line-effect" />
       <main className="flex-1">
         <HeroSection />
         <div className="section-divider" />
