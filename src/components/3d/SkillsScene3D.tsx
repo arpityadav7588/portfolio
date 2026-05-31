@@ -299,8 +299,8 @@ const CONNECTIONS: [number, number][] = [
   [0, 1], [2, 11], [3, 9], [6, 9], [10, 5], [4, 10],
 ];
 
-/* ─── Main Scene ─── */
-export default function SkillsScene3D() {
+/* ─── Constellation Group (uses useFrame, must be inside Canvas) ─── */
+function ConstellationGroup() {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
@@ -310,6 +310,32 @@ export default function SkillsScene3D() {
     }
   });
 
+  return (
+    <group ref={groupRef}>
+      <CoreShape />
+
+      {SKILL_NODES.map((node, i) => (
+        <SkillNode key={i} position={node.pos} color={node.color} size={0.07} label={node.label} level={node.level} />
+      ))}
+
+      {CONNECTIONS.map(([a, b], i) => (
+        <ConnectionLine
+          key={i}
+          start={SKILL_NODES[a].pos}
+          end={SKILL_NODES[b].pos}
+          color={SKILL_NODES[a].color}
+        />
+      ))}
+
+      <EnergyWaves />
+      <LabelRing />
+      <DataStreamParticles />
+    </group>
+  );
+}
+
+/* ─── Main Scene ─── */
+export default function SkillsScene3D() {
   return (
     <div className="w-full h-[400px] md:h-[500px]">
       <Canvas
@@ -324,26 +350,7 @@ export default function SkillsScene3D() {
 
         <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
 
-        <group ref={groupRef}>
-          <CoreShape />
-
-          {SKILL_NODES.map((node, i) => (
-            <SkillNode key={i} position={node.pos} color={node.color} size={0.07} label={node.label} level={node.level} />
-          ))}
-
-          {CONNECTIONS.map(([a, b], i) => (
-            <ConnectionLine
-              key={i}
-              start={SKILL_NODES[a].pos}
-              end={SKILL_NODES[b].pos}
-              color={SKILL_NODES[a].color}
-            />
-          ))}
-
-          <EnergyWaves />
-          <LabelRing />
-          <DataStreamParticles />
-        </group>
+        <ConstellationGroup />
 
         <fog attach="fog" args={["#0F172A", 6, 15]} />
       </Canvas>
