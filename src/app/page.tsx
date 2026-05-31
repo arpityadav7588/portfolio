@@ -99,6 +99,41 @@ function TypingText({ text, speed = 50 }: { text: string; speed?: number }) {
   );
 }
 
+/* ─── 3D Tilt Hook ─── */
+function useTilt(ref: React.RefObject<HTMLElement | null>, maxTilt = 8) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const handleMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      el.style.transform = `perspective(1000px) rotateY(${x * maxTilt}deg) rotateX(${-y * maxTilt}deg) translateZ(8px)`;
+    };
+    const handleLeave = () => {
+      el.style.transform = "perspective(1000px) rotateY(0deg) rotateX(0deg) translateZ(0px)";
+    };
+    el.addEventListener("mousemove", handleMove);
+    el.addEventListener("mouseleave", handleLeave);
+    return () => {
+      el.removeEventListener("mousemove", handleMove);
+      el.removeEventListener("mouseleave", handleLeave);
+    };
+  }, [ref, maxTilt]);
+}
+
+/* ─── Tilt Card Wrapper ─── */
+function TiltCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLElement>(null);
+  useTilt(ref);
+  return (
+    <div ref={ref as React.RefObject<HTMLDivElement>} className={`tilt-card transition-transform duration-200 ${className}`} style={{ transformStyle: "preserve-3d" }}>
+      <div className="tilt-shine rounded-xl" />
+      {children}
+    </div>
+  );
+}
+
 /* ─── Scroll Progress Bar ─── */
 function ScrollProgressBar() {
   const { scrollYProgress } = useScroll();
@@ -119,13 +154,13 @@ function OscWaveform() {
         <path
           d="M0,48 Q30,10 60,48 Q90,86 120,48 Q150,10 180,48 Q210,86 240,48 Q270,10 300,48 Q330,86 360,48 Q390,10 420,48 Q450,86 480,48 Q510,10 540,48 Q570,86 600,48 Q630,10 660,48 Q690,86 720,48 Q750,10 780,48 Q810,86 840,48 Q870,10 900,48 Q930,86 960,48 Q990,10 1020,48 Q1050,86 1080,48 Q1110,10 1140,48 Q1170,86 1200,48 Q1230,10 1260,48 Q1290,86 1320,48 Q1350,10 1380,48 Q1410,86 1440,48 Q1470,10 1500,48 Q1530,86 1560,48 Q1590,10 1620,48 Q1650,86 1680,48 Q1710,10 1740,48 Q1770,86 1800,48 Q1830,10 1860,48 Q1890,86 1920,48 Q1950,10 1980,48 Q2010,86 2040,48 Q2070,10 2100,48 Q2130,86 2160,48 Q2190,10 2220,48 Q2250,86 2280,48 Q2310,10 2340,48 Q2370,86 2400,48"
           fill="none"
-          stroke="#22d3ee"
+          stroke="#3B82F6"
           strokeWidth="2"
         />
         <path
           d="M0,52 Q30,20 60,52 Q90,84 120,52 Q150,20 180,52 Q210,84 240,52 Q270,20 300,52 Q330,84 360,52 Q390,20 420,52 Q450,84 480,52 Q510,20 540,52 Q570,84 600,52 Q630,20 660,52 Q690,84 720,52 Q750,20 780,52 Q810,84 840,52 Q870,20 900,52 Q930,84 960,52 Q990,20 1020,52 Q1050,84 1080,52 Q1110,20 1140,52 Q1170,84 1200,52 Q1230,20 1260,52 Q1290,84 1320,52 Q1350,20 1380,52 Q1410,84 1440,52 Q1470,20 1500,52 Q1530,84 1560,52 Q1590,20 1620,52 Q1650,84 1680,52 Q1710,20 1740,52 Q1770,84 1800,52 Q1830,20 1860,52 Q1890,84 1920,52 Q1950,20 1980,52 Q2010,84 2040,52 Q2070,20 2100,52 Q2130,84 2160,52 Q2190,20 2220,52 Q2250,84 2280,52 Q2310,20 2340,52 Q2370,84 2400,52"
           fill="none"
-          stroke="#34d399"
+          stroke="#14B8A6"
           strokeWidth="1"
           opacity="0.6"
         />
@@ -214,6 +249,9 @@ function HeroSection() {
       </Suspense>
 
       <OscWaveform />
+
+      {/* Holographic Shimmer Overlay */}
+      <div className="absolute inset-0 holo-shimmer pointer-events-none z-5" />
 
       <motion.div style={{ opacity }} className="relative z-10 max-w-5xl mx-auto px-4 text-center">
         {/* Profile Photo */}
@@ -644,11 +682,11 @@ function ProtocolsSection() {
   ];
 
   const osiLayers = [
-    { layer: 7, name: "Application", protocols: ["MQTT", "HTTP/REST", "Modbus"], color: "#a78bfa" },
-    { layer: 6, name: "Presentation", protocols: ["TLS/SSL", "JSON/PB"], color: "#8b5cf6" },
-    { layer: 5, name: "Session", protocols: ["WebSocket", "RPC"], color: "#7c3aed" },
-    { layer: 4, name: "Transport", protocols: ["TCP", "UDP"], color: "#22d3ee" },
-    { layer: 3, name: "Network", protocols: ["IP", "ICMP", "6LoWPAN"], color: "#34d399" },
+    { layer: 7, name: "Application", protocols: ["MQTT", "HTTP/REST", "Modbus"], color: "#818CF8" },
+    { layer: 6, name: "Presentation", protocols: ["TLS/SSL", "JSON/PB"], color: "#6366F1" },
+    { layer: 5, name: "Session", protocols: ["WebSocket", "RPC"], color: "#4F46E5" },
+    { layer: 4, name: "Transport", protocols: ["TCP", "UDP"], color: "#3B82F6" },
+    { layer: 3, name: "Network", protocols: ["IP", "ICMP", "6LoWPAN"], color: "#14B8A6" },
     { layer: 2, name: "Data Link", protocols: ["CAN", "Ethernet", "BLE LL"], color: "#f59e0b" },
     { layer: 1, name: "Physical", protocols: ["UART", "SPI", "I2C", "LoRa"], color: "#ef4444" },
   ];
@@ -784,7 +822,8 @@ function ProjectsSection() {
         {/* Project Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {projects.map((project, i) => (
-            <motion.div key={project.title} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }} className="perspective-card">
+            <TiltCard key={project.title} className="perspective-card">
+              <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }}>
               <div className={`perspective-card-inner rounded-xl p-5 h-full transition-all duration-500 group ${
                 project.color === "primary" ? "glass-card" : "glass-card-accent"
               }`}>
@@ -812,7 +851,8 @@ function ProjectsSection() {
                   ))}
                 </div>
               </div>
-            </motion.div>
+              </motion.div>
+            </TiltCard>
           ))}
         </div>
       </div>

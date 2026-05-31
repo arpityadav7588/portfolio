@@ -2,10 +2,10 @@
 
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, Text } from "@react-three/drei";
+import { Float } from "@react-three/drei";
 import * as THREE from "three";
 
-/* ─── 3D Oscilloscope Screen ─── */
+/* ─── 3D Oscilloscope Screen — Dark Tech Blue ─── */
 function OscilloscopeScreen() {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -14,8 +14,8 @@ function OscilloscopeScreen() {
     () => ({
       uniforms: {
         uTime: { value: 0 },
-        uColor1: { value: new THREE.Color("#22d3ee") },
-        uColor2: { value: new THREE.Color("#34d399") },
+        uColor1: { value: new THREE.Color("#3B82F6") },
+        uColor2: { value: new THREE.Color("#14B8A6") },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -37,8 +37,8 @@ function OscilloscopeScreen() {
         void main() {
           vec2 uv = vUv;
           
-          // Background - dark screen
-          vec3 bgColor = vec3(0.02, 0.02, 0.06);
+          // Background — deep navy screen
+          vec3 bgColor = vec3(0.059, 0.09, 0.165);
           
           // Grid lines
           float gridX = smoothstep(0.02, 0.0, abs(fract(uv.x * 10.0) - 0.5) - 0.48);
@@ -50,13 +50,13 @@ function OscilloscopeScreen() {
           float centerY = smoothstep(0.005, 0.0, abs(uv.y - 0.5));
           float crosshair = max(centerX, centerY) * 0.3;
           
-          // Waveform 1 - main signal (cyan)
+          // Waveform 1 — Electric Blue main signal
           float wave1Y = 0.5 + sineWave(uv.x, 12.0, 0.25, uTime * 3.0) 
                          + sineWave(uv.x, 6.0, 0.1, uTime * 1.5);
           float wave1 = smoothstep(0.015, 0.0, abs(uv.y - wave1Y));
           float wave1Glow = smoothstep(0.08, 0.0, abs(uv.y - wave1Y)) * 0.3;
           
-          // Waveform 2 - secondary signal (emerald)
+          // Waveform 2 — Teal secondary signal
           float wave2Y = 0.5 + sineWave(uv.x, 8.0, 0.2, uTime * 2.0 + 1.5)
                          + sineWave(uv.x, 20.0, 0.05, uTime * 4.0);
           float wave2 = smoothstep(0.01, 0.0, abs(uv.y - wave2Y));
@@ -98,23 +98,15 @@ function OscilloscopeScreen() {
   return (
     <Float speed={1} rotationIntensity={0.1} floatIntensity={0.3}>
       <group>
-        {/* Oscilloscope body */}
+        {/* Oscilloscope body — Slate Blue */}
         <mesh position={[0, 0, -0.15]}>
           <boxGeometry args={[3.2, 2.2, 0.4]} />
-          <meshStandardMaterial
-            color="#1a1a2e"
-            metalness={0.7}
-            roughness={0.3}
-          />
+          <meshStandardMaterial color="#1E293B" metalness={0.7} roughness={0.3} />
         </mesh>
         {/* Screen bezel */}
         <mesh position={[0, 0, 0.06]}>
           <boxGeometry args={[2.8, 1.9, 0.02]} />
-          <meshStandardMaterial
-            color="#0a0a1a"
-            metalness={0.5}
-            roughness={0.5}
-          />
+          <meshStandardMaterial color="#0F172A" metalness={0.5} roughness={0.5} />
         </mesh>
         {/* Screen with shader */}
         <mesh ref={meshRef} position={[0, 0, 0.08]}>
@@ -130,26 +122,22 @@ function OscilloscopeScreen() {
         {[-1.2, -0.8, -0.4].map((x, i) => (
           <mesh key={i} position={[x, -1.0, 0.1]}>
             <cylinderGeometry args={[0.08, 0.08, 0.1, 16]} />
-            <meshStandardMaterial
-              color="#333355"
-              metalness={0.8}
-              roughness={0.2}
-            />
+            <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.2} />
           </mesh>
         ))}
         {/* Knob labels */}
         {["VOLTS", "TIME", "TRIG"].map((label, i) => (
-          <mesh key={`label-${i}`} position={[-1.2 + i * 0.4, -1.25, 0.1]} rotation={[0, 0, 0]}>
+          <mesh key={`label-${i}`} position={[-1.2 + i * 0.4, -1.25, 0.1]}>
             <boxGeometry args={[0.3, 0.12, 0.01]} />
-            <meshStandardMaterial color="#222244" />
+            <meshStandardMaterial color="#1E293B" />
           </mesh>
         ))}
-        {/* Brand marking */}
+        {/* Brand marking — Electric Blue glow */}
         <mesh position={[0.8, -1.0, 0.1]}>
           <boxGeometry args={[0.6, 0.15, 0.01]} />
           <meshStandardMaterial
-            color="#22d3ee"
-            emissive="#22d3ee"
+            color="#3B82F6"
+            emissive="#3B82F6"
             emissiveIntensity={0.3}
           />
         </mesh>
@@ -169,12 +157,12 @@ export default function OscilloscopeScene3D() {
         style={{ background: "transparent" }}
       >
         <ambientLight intensity={0.15} />
-        <pointLight position={[3, 3, 3]} intensity={0.4} color="#22d3ee" />
-        <pointLight position={[-2, -1, 2]} intensity={0.2} color="#34d399" />
+        <pointLight position={[3, 3, 3]} intensity={0.4} color="#3B82F6" />
+        <pointLight position={[-2, -1, 2]} intensity={0.2} color="#14B8A6" />
 
         <OscilloscopeScreen />
 
-        <fog attach="fog" args={["#0a0a1a", 6, 14]} />
+        <fog attach="fog" args={["#0F172A", 6, 14]} />
       </Canvas>
     </div>
   );

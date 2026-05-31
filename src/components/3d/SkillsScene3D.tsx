@@ -2,50 +2,8 @@
 
 import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, Text3D, Center } from "@react-three/drei";
+import { Float } from "@react-three/drei";
 import * as THREE from "three";
-
-/* ─── 3D Radar Chart for Skills ─── */
-function SkillAxis({ angle, length, label }: { angle: number; length: number; label: string }) {
-  const ref = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (ref.current) {
-      ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.5 + angle) * 0.02;
-    }
-  });
-
-  const x = Math.cos(angle) * length;
-  const y = Math.sin(angle) * length;
-
-  return (
-    <group ref={ref}>
-      {/* Axis line */}
-      <mesh>
-        <cylinderGeometry args={[0.008, 0.008, length, 8]} />
-        <meshStandardMaterial
-          color="#22d3ee"
-          emissive="#22d3ee"
-          emissiveIntensity={0.3}
-          transparent
-          opacity={0.4}
-        />
-      </mesh>
-      <group rotation={[0, 0, angle]} position={[length / 2, 0, 0]}>
-        <mesh>
-          <cylinderGeometry args={[0.008, 0.008, length, 8]} />
-          <meshStandardMaterial
-            color="#22d3ee"
-            emissive="#22d3ee"
-            emissiveIntensity={0.3}
-            transparent
-            opacity={0.4}
-          />
-        </mesh>
-      </group>
-    </group>
-  );
-}
 
 /* ─── Glowing Node ─── */
 function SkillNode({
@@ -68,13 +26,7 @@ function SkillNode({
   return (
     <mesh ref={ref} position={position}>
       <sphereGeometry args={[size, 16, 16]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={0.6}
-        transparent
-        opacity={0.9}
-      />
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} transparent opacity={0.9} />
     </mesh>
   );
 }
@@ -99,7 +51,7 @@ function ConnectionLine({
   );
 }
 
-/* ─── Rotating Octahedron Core ─── */
+/* ─── Rotating Octahedron Core — Dark Tech Blue ─── */
 function CoreShape() {
   const ref = useRef<THREE.Mesh>(null);
 
@@ -116,9 +68,9 @@ function CoreShape() {
       <mesh ref={ref}>
         <octahedronGeometry args={[1, 0]} />
         <meshStandardMaterial
-          color="#0a0a2e"
-          emissive="#22d3ee"
-          emissiveIntensity={0.2}
+          color="#0F172A"
+          emissive="#3B82F6"
+          emissiveIntensity={0.25}
           metalness={0.95}
           roughness={0.05}
           wireframe
@@ -127,7 +79,7 @@ function CoreShape() {
       <mesh ref={ref}>
         <octahedronGeometry args={[0.95, 0]} />
         <meshStandardMaterial
-          color="#0d0d2b"
+          color="#1E293B"
           metalness={0.9}
           roughness={0.1}
           transparent
@@ -138,20 +90,20 @@ function CoreShape() {
   );
 }
 
-/* ─── Skill Constellation Nodes ─── */
+/* ─── Skill Constellation Nodes — Dark Tech Blue Palette ─── */
 const SKILL_NODES: { pos: [number, number, number]; color: string; label: string }[] = [
-  { pos: [2, 1.2, 0.5], color: "#22d3ee", label: "Verilog" },
-  { pos: [-1.8, 1.5, -0.3], color: "#22d3ee", label: "FPGA" },
-  { pos: [0.5, 2, 0.8], color: "#34d399", label: "ESP32" },
-  { pos: [-2, -0.8, 0.4], color: "#34d399", label: "RTOS" },
-  { pos: [1.5, -1.5, -0.6], color: "#a78bfa", label: "React" },
-  { pos: [-0.5, -2, 0.2], color: "#a78bfa", label: "Python" },
-  { pos: [2.2, -0.3, -0.8], color: "#f59e0b", label: "PCB" },
-  { pos: [-1.5, 0.5, -1], color: "#f59e0b", label: "MATLAB" },
-  { pos: [0, 0.5, 2], color: "#22d3ee", label: "VHDL" },
-  { pos: [1, -0.8, 1.5], color: "#34d399", label: "C/C++" },
-  { pos: [-1.2, -1.2, 1.2], color: "#a78bfa", label: "Docker" },
-  { pos: [0.8, 1.5, -1.5], color: "#f59e0b", label: "KiCad" },
+  { pos: [2, 1.2, 0.5], color: "#3B82F6", label: "Verilog" },
+  { pos: [-1.8, 1.5, -0.3], color: "#3B82F6", label: "FPGA" },
+  { pos: [0.5, 2, 0.8], color: "#14B8A6", label: "ESP32" },
+  { pos: [-2, -0.8, 0.4], color: "#14B8A6", label: "RTOS" },
+  { pos: [1.5, -1.5, -0.6], color: "#818CF8", label: "React" },
+  { pos: [-0.5, -2, 0.2], color: "#818CF8", label: "Python" },
+  { pos: [2.2, -0.3, -0.8], color: "#F59E0B", label: "PCB" },
+  { pos: [-1.5, 0.5, -1], color: "#F59E0B", label: "MATLAB" },
+  { pos: [0, 0.5, 2], color: "#3B82F6", label: "VHDL" },
+  { pos: [1, -0.8, 1.5], color: "#14B8A6", label: "C/C++" },
+  { pos: [-1.2, -1.2, 1.2], color: "#818CF8", label: "Docker" },
+  { pos: [0.8, 1.5, -1.5], color: "#F59E0B", label: "KiCad" },
 ];
 
 const CONNECTIONS: [number, number][] = [
@@ -171,8 +123,8 @@ export default function SkillsScene3D() {
         style={{ background: "transparent" }}
       >
         <ambientLight intensity={0.2} />
-        <pointLight position={[3, 3, 3]} intensity={0.6} color="#22d3ee" />
-        <pointLight position={[-3, -2, 2]} intensity={0.4} color="#34d399" />
+        <pointLight position={[3, 3, 3]} intensity={0.6} color="#3B82F6" />
+        <pointLight position={[-3, -2, 2]} intensity={0.4} color="#14B8A6" />
 
         <CoreShape />
 
@@ -189,7 +141,7 @@ export default function SkillsScene3D() {
           />
         ))}
 
-        <fog attach="fog" args={["#0a0a1a", 6, 15]} />
+        <fog attach="fog" args={["#0F172A", 6, 15]} />
       </Canvas>
     </div>
   );

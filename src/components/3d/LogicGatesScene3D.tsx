@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -27,14 +27,10 @@ function GateBody({
   return (
     <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.3}>
       <group position={position}>
-        {/* Gate body */}
+        {/* Gate body — Slate Blue */}
         <mesh ref={ref}>
           <boxGeometry args={[1.2, 0.8, 0.3]} />
-          <meshStandardMaterial
-            color="#0d0d2b"
-            metalness={0.7}
-            roughness={0.2}
-          />
+          <meshStandardMaterial color="#1E293B" metalness={0.7} roughness={0.2} />
         </mesh>
         {/* Gate border glow */}
         <mesh position={[0, 0, 0.01]}>
@@ -58,31 +54,21 @@ function GateBody({
         {/* Input pins */}
         <mesh position={[-0.75, 0.2, 0]}>
           <cylinderGeometry args={[0.04, 0.04, 0.3, 8]} />
-          <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
+          <meshStandardMaterial color="#94A3B8" metalness={0.9} roughness={0.1} />
         </mesh>
         <mesh position={[-0.75, -0.2, 0]}>
           <cylinderGeometry args={[0.04, 0.04, 0.3, 8]} />
-          <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
+          <meshStandardMaterial color="#94A3B8" metalness={0.9} roughness={0.1} />
         </mesh>
         {/* Output pin */}
         <mesh position={[0.75, 0, 0]}>
           <cylinderGeometry args={[0.04, 0.04, 0.3, 8]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.5}
-            metalness={0.9}
-            roughness={0.1}
-          />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} metalness={0.9} roughness={0.1} />
         </mesh>
         {/* Status LED */}
         <mesh position={[0, 0.35, 0.16]}>
           <sphereGeometry args={[0.04, 12, 12]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.8}
-          />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.8} />
         </mesh>
       </group>
     </Float>
@@ -108,7 +94,7 @@ function Wire({
   );
 }
 
-/* ─── Floating Binary ─── */
+/* ─── Floating Binary — Dark Tech Blue ─── */
 function FloatingBit({ position, char }: { position: [number, number, number]; char: string }) {
   const ref = useRef<THREE.Mesh>(null);
 
@@ -124,8 +110,8 @@ function FloatingBit({ position, char }: { position: [number, number, number]; c
       <div
         className="font-mono text-sm font-bold select-none pointer-events-none"
         style={{
-          color: char === "1" ? "#22d3ee" : "#333355",
-          textShadow: char === "1" ? "0 0 10px rgba(34,211,238,0.5)" : "none",
+          color: char === "1" ? "#3B82F6" : "#334155",
+          textShadow: char === "1" ? "0 0 10px rgba(59,130,246,0.5)" : "none",
         }}
       >
         {char}
@@ -134,7 +120,7 @@ function FloatingBit({ position, char }: { position: [number, number, number]; c
   );
 }
 
-/* ─── Main Scene ─── */
+/* ─── Main Scene — Dark Tech Blue ─── */
 export default function LogicGatesScene3D() {
   return (
     <div className="w-full h-[350px] md:h-[450px]">
@@ -145,18 +131,18 @@ export default function LogicGatesScene3D() {
         style={{ background: "transparent" }}
       >
         <ambientLight intensity={0.2} />
-        <pointLight position={[4, 4, 4]} intensity={0.5} color="#22d3ee" />
-        <pointLight position={[-3, -2, 3]} intensity={0.3} color="#34d399" />
+        <pointLight position={[4, 4, 4]} intensity={0.5} color="#3B82F6" />
+        <pointLight position={[-3, -2, 3]} intensity={0.3} color="#14B8A6" />
 
-        <GateBody position={[-2.5, 0.8, 0]} type="AND" color="#22d3ee" />
-        <GateBody position={[-2.5, -0.8, 0]} type="OR" color="#34d399" />
-        <GateBody position={[0, 0, 0]} type="XOR" color="#a78bfa" />
-        <GateBody position={[2.5, 0, 0]} type="NAND" color="#f59e0b" />
+        <GateBody position={[-2.5, 0.8, 0]} type="AND" color="#3B82F6" />
+        <GateBody position={[-2.5, -0.8, 0]} type="OR" color="#14B8A6" />
+        <GateBody position={[0, 0, 0]} type="XOR" color="#818CF8" />
+        <GateBody position={[2.5, 0, 0]} type="NAND" color="#F59E0B" />
 
         {/* Wires connecting gates */}
-        <Wire start={[-1.8, 0.8, 0]} end={[-0.6, 0.2, 0]} color="#22d3ee" />
-        <Wire start={[-1.8, -0.8, 0]} end={[-0.6, -0.2, 0]} color="#34d399" />
-        <Wire start={[0.6, 0, 0]} end={[1.8, 0, 0]} color="#a78bfa" />
+        <Wire start={[-1.8, 0.8, 0]} end={[-0.6, 0.2, 0]} color="#3B82F6" />
+        <Wire start={[-1.8, -0.8, 0]} end={[-0.6, -0.2, 0]} color="#14B8A6" />
+        <Wire start={[0.6, 0, 0]} end={[1.8, 0, 0]} color="#818CF8" />
 
         {/* Floating binary bits */}
         {[
@@ -171,7 +157,7 @@ export default function LogicGatesScene3D() {
           />
         ))}
 
-        <fog attach="fog" args={["#0a0a1a", 6, 16]} />
+        <fog attach="fog" args={["#0F172A", 6, 16]} />
       </Canvas>
     </div>
   );

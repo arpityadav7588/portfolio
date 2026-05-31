@@ -27,11 +27,11 @@ function ProjectCard3D({
   return (
     <group ref={ref} position={position}>
       <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
-        {/* Card body */}
+        {/* Card body — Slate Blue */}
         <mesh castShadow>
           <boxGeometry args={[1.6, 1.1, 0.04]} />
           <meshStandardMaterial
-            color="#0d0d2b"
+            color="#1E293B"
             metalness={0.7}
             roughness={0.2}
             transparent
@@ -44,7 +44,7 @@ function ProjectCard3D({
           <meshStandardMaterial
             color={color}
             emissive={color}
-            emissiveIntensity={0.3}
+            emissiveIntensity={0.35}
             transparent
             opacity={0.3}
           />
@@ -52,18 +52,14 @@ function ProjectCard3D({
         {/* Top accent bar */}
         <mesh position={[0, 0.48, 0.03]}>
           <boxGeometry args={[1.4, 0.06, 0.01]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.5}
-          />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} />
         </mesh>
         {/* Content lines (simulating text) */}
         {[-0.1, -0.25, -0.4].map((y, i) => (
           <mesh key={i} position={[0, y, 0.03]}>
             <boxGeometry args={[1.0 - i * 0.2, 0.04, 0.01]} />
             <meshStandardMaterial
-              color="#1a1a3e"
+              color="#334155"
               emissive={color}
               emissiveIntensity={0.05}
               transparent
@@ -75,11 +71,7 @@ function ProjectCard3D({
         {[-0.3, 0, 0.3].map((x, i) => (
           <mesh key={`dot-${i}`} position={[x, -0.35, 0.03]}>
             <sphereGeometry args={[0.04, 12, 12]} />
-            <meshStandardMaterial
-              color={color}
-              emissive={color}
-              emissiveIntensity={0.6}
-            />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} />
           </mesh>
         ))}
       </Float>
@@ -100,14 +92,14 @@ function InfiniteGrid() {
   return (
     <gridHelper
       ref={gridRef}
-      args={[40, 40, "#22d3ee", "#0a1628"]}
+      args={[40, 40, "#3B82F6", "#1E293B"]}
       position={[0, -3, 0]}
       rotation={[0, 0, 0]}
     />
   );
 }
 
-/* ─── Main Scene ─── */
+/* ─── Main Scene — Dark Tech Blue ─── */
 export default function ProjectsScene3D() {
   return (
     <div className="w-full h-[300px] md:h-[400px]">
@@ -118,16 +110,16 @@ export default function ProjectsScene3D() {
         style={{ background: "transparent" }}
       >
         <ambientLight intensity={0.15} />
-        <pointLight position={[5, 5, 5]} intensity={0.5} color="#22d3ee" />
-        <pointLight position={[-5, 3, 3]} intensity={0.3} color="#34d399" />
+        <pointLight position={[5, 5, 5]} intensity={0.5} color="#3B82F6" />
+        <pointLight position={[-5, 3, 3]} intensity={0.3} color="#14B8A6" />
 
-        <ProjectCard3D position={[-2.5, 0, 0]} color="#22d3ee" rotationSpeed={0.15} />
-        <ProjectCard3D position={[0, 0.5, -1]} color="#34d399" rotationSpeed={-0.12} />
-        <ProjectCard3D position={[2.5, 0, 0]} color="#a78bfa" rotationSpeed={0.1} />
+        <ProjectCard3D position={[-2.5, 0, 0]} color="#3B82F6" rotationSpeed={0.15} />
+        <ProjectCard3D position={[0, 0.5, -1]} color="#14B8A6" rotationSpeed={-0.12} />
+        <ProjectCard3D position={[2.5, 0, 0]} color="#818CF8" rotationSpeed={0.1} />
 
         <InfiniteGrid />
 
-        <fog attach="fog" args={["#0a0a1a", 8, 20]} />
+        <fog attach="fog" args={["#0F172A", 8, 20]} />
       </Canvas>
     </div>
   );
