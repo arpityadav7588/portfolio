@@ -156,7 +156,7 @@ function Wire({
 
 /* ─── Floating Binary — Dark Tech Blue ─── */
 function FloatingBit({ position, char }: { position: [number, number, number]; char: string }) {
-  const ref = useRef<THREE.Mesh>(null);
+  const ref = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     if (ref.current) {
@@ -166,17 +166,19 @@ function FloatingBit({ position, char }: { position: [number, number, number]; c
   });
 
   return (
-    <Html position={position} ref={ref as any} transform>
-      <div
-        className="font-mono text-sm font-bold select-none pointer-events-none"
-        style={{
-          color: char === "1" ? "#3B82F6" : "#334155",
-          textShadow: char === "1" ? "0 0 10px rgba(59,130,246,0.5)" : "none",
-        }}
-      >
-        {char}
-      </div>
-    </Html>
+    <group ref={ref} position={position}>
+      <Html transform>
+        <div
+          className="font-mono text-sm font-bold select-none pointer-events-none"
+          style={{
+            color: char === "1" ? "#3B82F6" : "#334155",
+            textShadow: char === "1" ? "0 0 10px rgba(59,130,246,0.5)" : "none",
+          }}
+        >
+          {char}
+        </div>
+      </Html>
+    </group>
   );
 }
 
