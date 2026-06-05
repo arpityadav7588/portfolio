@@ -58,24 +58,42 @@ export function EducationSection() {
         <div className="relative">
           <div className="absolute left-4 md:left-1/2 md:-translate-x-px top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-violet/40" />
           <div className="space-y-12">
-            {timeline.map((item, i) => (
-              <motion.div key={item.title} initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: i * 0.1 }} viewport={{ once: true }} className="relative flex items-start gap-6 flex-row">
-                <div className="absolute left-4 md:left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-primary border-4 border-background z-10 mt-6 animate-pulse-glow" />
-                <div className={`ml-10 md:ml-0 md:w-1/2 ${i % 2 === 0 ? "md:pr-12" : "md:pl-12"}`}>
-                  <div className="glass-card rounded-xl p-5">
-                    <Badge variant="outline" className="text-xs border-primary/50 text-primary mb-2">{item.year}</Badge>
-                    <h3 className="text-lg font-bold leading-snug mb-1">{item.title}</h3>
-                    <p className="text-sm text-primary/70 mb-2">{item.institution}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed mb-3">{item.description}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {item.highlights.map((h) => (
-                        <Badge key={h} variant="secondary" className="text-[9px] bg-accent/10 text-accent border-accent/20">{h}</Badge>
-                      ))}
+            {timeline.map((item, i) => {
+              const isLeft = i % 2 === 0;
+              return (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, x: isLeft ? -30 : 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  className={`relative flex items-start gap-6 ${
+                    isLeft ? "md:flex-row" : "md:flex-row-reverse"
+                  } flex-row`}
+                >
+                  {/* Timeline node dot in the center */}
+                  <div className="absolute left-4 md:left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-primary border-4 border-background z-10 mt-6 animate-pulse-glow" />
+                  
+                  {/* Card Container */}
+                  <div className={`ml-10 md:ml-0 md:w-1/2 ${isLeft ? "md:pr-12" : "md:pl-12"}`}>
+                    <div className="glass-card rounded-xl p-5">
+                      <Badge variant="outline" className="text-xs border-primary/50 text-primary mb-2">{item.year}</Badge>
+                      <h3 className="text-lg font-bold leading-snug mb-1">{item.title}</h3>
+                      <p className="text-sm text-primary/70 mb-2">{item.institution}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-3">{item.description}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.highlights.map((h) => (
+                          <Badge key={h} variant="secondary" className="text-[9px] bg-accent/10 text-accent border-accent/20">{h}</Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+
+                  {/* Spacer to align alternating sides on desktop */}
+                  <div className="hidden md:block md:w-1/2" />
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
